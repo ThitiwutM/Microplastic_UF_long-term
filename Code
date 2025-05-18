@@ -1,0 +1,479 @@
+### MLR
+
+model_1 <- lm("MP.permeate ~ .", data = data1_train)
+summary(model_1)
+model_1
+
+### Print predicted value
+
+pred <- predict(model_1, data1_train)
+pred
+
+original_pred <- ((pred * (max(data$MP.permeate) - min(data$MP.permeate))) 
+             + min(data$MP.permeate))
+original_pred
+
+pred_1 <- predict(model_1, data1_test)
+pred_1
+
+original_pred_1 <- ((pred_1 * (max(data$MP.permeate) - min(data$MP.permeate))) 
+             + min(data$MP.permeate))
+original_pred_1
+
+### model accuracy
+
+rmse_val <- sqrt(mean((data1_train$MP.permeate - pred)^2))
+rmse_val
+
+mae_val <- mean(abs(data1_train$MP.permeate - pred))
+mae_val
+
+r2_val <- cor(data1_train$MP.permeate, pred)^2
+r2_val
+
+
+rmse_val <- sqrt(mean((data1_test$MP.permeate - pred_1)^2))
+rmse_val
+
+mae_val <- mean(abs(data1_test$MP.permeate - pred_1))
+mae_val
+
+r2_val <- cor(data1_test$MP.permeate, pred_1)^2
+r2_val
+
+### Ridge regression
+
+x = as.matrix(data1_train[, -19])
+y = data1_train$MP.permeate
+
+x_test = as.matrix(data1_test[, -19])
+y_test = data1_test$MP.permeate
+
+lambdas <- 10^seq(2, -3, by = -.1)
+
+ridge_1 <- glmnet(x, y, nlambda = 25, alpha = 0, family = 'gaussian', lambda = lambdas)
+summary(ridge_1)
+cv_ridge <- cv.glmnet(x, y, alpha = 0, lambda = lambdas)
+optimal_lambda <- cv_ridge$lambda.min
+optimal_lambda
+
+### Print predicted value
+
+pred_ridge <- predict(ridge_1, s = optimal_lambda, newx = x)
+pred_ridge
+
+pred_1_ridge <- predict(ridge_1, s = optimal_lambda, newx = x_test)
+pred_1_ridge
+
+### model accuracy
+
+rmse_val <- sqrt(mean((y - pred_ridge)^2))
+rmse_val
+
+mae_val <- mean(abs(y - pred_ridge))
+mae_val
+
+r2_val <- cor(y, pred_ridge)^2
+r2_val
+
+
+
+rmse_val <- sqrt(mean((y_test - pred_1_ridge)^2))
+rmse_val
+
+mae_val <- mean(abs(y_test - pred_1_ridge))
+mae_val
+
+r2_val <- cor(y_test, pred_1_ridge)^2
+r2_val
+
+### Lasso regression
+
+lasso_1 <- cv.glmnet(x, y, alpha = 1, lambda = lambdas, standardize = TRUE)
+summary(lasso_1)
+
+lambda_best <- lasso_1$lambda.min
+lambda_best
+
+### Print predicted value
+
+pred_lasso <- predict(lasso_1, s = lambda_best, newx = x)
+pred_lasso
+
+original_pred_lasso <- ((pred_lasso * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                  + min(data$MP.permeate))
+original_pred_lasso
+
+pred_1_lasso <- predict(lasso_1, s = lambda_best, newx = x_test)
+pred_1_lasso
+
+original_pred_1_lasso <- ((pred_1_lasso * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                        + min(data$MP.permeate))
+original_pred_1_lasso
+
+### model accuracy
+
+rmse_val <- sqrt(mean((y - pred_lasso)^2))
+rmse_val
+
+mae_val <- mean(abs(y - pred_lasso))
+mae_val
+
+r2_val <- cor(y, pred_lasso)^2
+r2_val
+
+rmse_val <- sqrt(mean((y_test - pred_1_lasso)^2))
+rmse_val
+
+mae_val <- mean(abs(y_test - pred_1_lasso))
+mae_val
+
+r2_val <- cor(y_test, pred_1_lasso)^2
+r2_val
+
+### k-NN model
+
+library(FNN) 
+
+# Training
+knn_1 <- knn.reg(train = x, test = x, y = y, k = 7)
+summary(knn_1)
+
+knn_1$pred
+
+# testing
+knn_2 <- knn.reg(train = x, test = x_test, y = y, k = 7)
+summary(knn_2)
+
+knn_2$pred
+
+### model accuracy
+
+rmse_val <- sqrt(mean((y - knn_1$pred)^2))
+rmse_val
+
+mae_val <- mean(abs(y - knn_1$pred))
+mae_val
+
+r2_val <- cor(y, knn_1$pred)^2
+r2_val
+
+rmse_val <- sqrt(mean((y_test - knn_2$pred)^2))
+rmse_val
+
+mae_val <- mean(abs(y_test - knn_2$pred))
+mae_val
+
+r2_val <- cor(y_test, knn_2$pred)^2
+r2_val
+
+### SVM model
+library(e1071)
+
+svm_1 <- svm(x, y, type = "eps-regression")
+y_train <- predict(svm_1, x)
+y_train
+
+original_pred_svm <- ((y_train * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                      + min(data$MP.permeate))
+original_pred_svm
+
+original_actual_svm <- ((y * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                        + min(data$MP.permeate))
+original_actual_svm
+
+y_pred_svm <- predict(svm_1, x_test)
+y_pred_svm
+
+original_pred_1_svm <- ((y_pred_svm * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                        + min(data$MP.permeate))
+original_pred_1_svm
+
+original_actual_svm <- ((y_test * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                        + min(data$MP.permeate))
+original_actual_svm
+
+
+### model accuracy
+
+rmse_val <- sqrt(mean((y - y_train)^2))
+rmse_val
+
+mae_val <- mean(abs(y - y_train))
+mae_val
+
+r2_val <- cor(y, y_train)^2
+r2_val
+
+rmse_val <- sqrt(mean((y_test - y_pred_svm)^2))
+rmse_val
+
+mae_val <- mean(abs(y_test - y_pred_svm))
+mae_val
+
+r2_val <- cor(y_test, y_pred_svm)^2
+r2_val
+
+### Bayesian Regression
+library(Rcpp)
+library(rstanarm)
+
+blr1 <- stan_glm(data1_train$MP.permeate ~ ., 
+                 data=data1_train)
+summary(blr1)
+
+pred_blr <- posterior_predict(blr1, newdata = data1_train)
+mean_pred_blr <- apply(pred_blr, 2, mean)
+mean_pred_blr
+
+pred_blr_1 <- posterior_predict(blr1, newdata = data1_test)
+mean_pred_blr_1 <- apply(pred_blr_1, 2, mean)
+mean_pred_blr_1
+
+
+### model accuracy
+
+rmse_val <- sqrt(mean((y - mean_pred_blr)^2))
+rmse_val
+
+mae_val <- mean(abs(y - mean_pred_blr))
+mae_val
+
+r2_val <- cor(y, mean_pred_blr)^2
+r2_val
+
+rmse_val <- sqrt(mean((y_test - mean_pred_blr_1)^2))
+rmse_val
+
+mae_val <- mean(abs(y_test - mean_pred_blr_1))
+mae_val
+
+r2_val <- cor(y_test, mean_pred_blr_1)^2
+r2_val
+
+### Decision tree model
+
+library(rpart) 
+
+DTmod_1 <- rpart(data1_train$MP.permeate ~ .,  
+                 data = data1_train)
+
+print(DTmod_1)
+
+### Print predicted value
+
+pred_DT <- predict(DTmod_1, data1_train)
+pred_DT
+
+original_pred_DT <- ((pred_DT * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                      + min(data$MP.permeate))
+original_pred_DT
+
+original_actual_DT <- ((y * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                        + min(data$MP.permeate))
+original_actual_DT
+
+
+
+pred_1_DT <- predict(DTmod_1, data1_test)
+pred_1_DT
+
+original_pred_1_DT <- ((pred_1_DT * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                     + min(data$MP.permeate))
+original_pred_1_DT
+
+original_actual_1_DT <- ((y_test * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                       + min(data$MP.permeate))
+original_actual_1_DT
+
+### model accuracy
+
+rmse_val <- sqrt(mean((y - pred_DT)^2))
+rmse_val
+
+mae_val <- mean(abs(y - pred_DT))
+mae_val
+
+r2_val <- cor(data1_train$MP.permeate, pred_DT)^2
+r2_val
+
+
+rmse_val <- sqrt(mean((y_test - pred_1_DT)^2))
+rmse_val
+
+mae_val <- mean(abs(y_test - pred_1_DT))
+mae_val
+
+r2_val <- cor(data1_test$MP.permeate, pred_1_DT)^2
+r2_val
+
+
+### Random forest model
+
+library(randomForest)
+
+RFmod_1 <- randomForest(x = x, y = y, ntree = 100) 
+
+plot(RFmod_1)
+
+### Print predicted value
+
+pred_RF <- predict(RFmod_1, data1_train)
+pred_RF
+
+original_pred_RF <- ((pred_RF * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                      + min(data$MP.permeate))
+original_pred_RF
+
+original_actual_RF <- ((y * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                        + min(data$MP.permeate))
+original_actual_RF
+
+pred_1_RF <- predict(RFmod_1, data1_test)
+pred_1_RF
+
+original_pred_1_RF <- ((pred_1_RF * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                        + min(data$MP.permeate))
+original_pred_1_RF
+
+original_actual_1_RF <- ((y_test * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                          + min(data$MP.permeate))
+original_actual_1_RF
+
+### model accuracy
+
+rmse_val <- sqrt(mean((y - pred_RF)^2))
+rmse_val
+
+mae_val <- mean(abs(y - pred_RF))
+mae_val
+
+r2_val <- cor(data1_train$MP.permeate, pred_RF)^2
+r2_val
+
+
+rmse_val <- sqrt(mean((y_test - pred_1_RF)^2))
+rmse_val
+
+mae_val <- mean(abs(y_test - pred_1_RF))
+mae_val
+
+r2_val <- cor(data1_test$MP.permeate, pred_1_RF)^2
+r2_val
+
+### XG Boost model
+
+library(xgboost)
+
+xgb_model <- xgboost(data = x, label = y, nrounds = 100, 
+                     objective = "reg:squarederror")
+
+### Print predicted value
+
+pred_xgb <- predict(xgb_model, x)
+pred_xgb
+
+original_pred_xgb <- ((pred_xgb * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                  + min(data$MP.permeate))
+original_pred_xgb
+
+original_actual_xgb <- ((y * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                      + min(data$MP.permeate))
+original_actual_xgb
+
+pred_1_xgb <- predict(xgb_model, x_test)
+pred_1_xgb
+
+original_pred_1_xgb <- ((pred_1_xgb * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                  + min(data$MP.permeate))
+original_pred_1_xgb
+
+original_actual_1_xgb <- ((y_test * (max(data$MP.permeate) - min(data$MP.permeate))) 
+                        + min(data$MP.permeate))
+original_actual_1_xgb
+
+### model accuracy
+
+rmse_val <- sqrt(mean((y - pred_xgb)^2))
+rmse_val
+
+mae_val <- mean(abs(y - pred_xgb))
+mae_val
+
+r2_val <- cor(data1_train$MP.permeate, pred_xgb)^2
+r2_val
+
+
+rmse_val <- sqrt(mean((y_test - pred_1_xgb)^2))
+rmse_val
+
+mae_val <- mean(abs(y_test - pred_1_xgb))
+mae_val
+
+r2_val <- cor(data1_test$MP.permeate, pred_1_xgb)^2
+r2_val
+
+### ANN model
+
+library(neuralnet)
+library(MASS)
+
+nn_mod <- neuralnet(data1_train$MP.permeate ~ ., data = data1_train, 
+                    hidden = 12)
+plot(nn_mod)
+
+pred_nn <- compute(nn_mod, data1_train)
+pr.nn_ <- pred_nn$net.result
+pr.nn_
+
+
+pred_1_nn <- compute(nn_mod, data1_test)
+pr.nn_1_ <- pred_1_nn$net.result
+pr.nn_1_
+
+
+### model accuracy
+
+rmse_val <- sqrt(mean((data1_train$MP.permeate - pr.nn_)^2))
+rmse_val
+
+mae_val <- mean(abs(data1_train$MP.permeate - pr.nn_))
+mae_val
+
+r2_val <- cor(data1_train$MP.permeate, pr.nn_)^2
+r2_val
+
+
+rmse_val <- sqrt(mean((data1_test$MP.permeate - pr.nn_1_)^2))
+rmse_val
+
+mae_val <- mean(abs(data1_test$MP.permeate - pr.nn_1_))
+mae_val
+
+r2_val <- cor(data1_test$MP.permeate, pr.nn_1_)^2
+r2_val
+
+
+### SHAP analysis
+
+library(kernelshap)
+library(shapviz)
+
+s <- kernelshap(RFmod_1, X = x)
+head(s)
+
+
+sv <- shapviz(s)
+
+sv$S
+
+sv_importance(sv)
+
+
+sv_importance(sv, kind = "bee")
+
+data
+
+xvars <- c("TMP", "Flux", "Permeability", "Resistance", "Filtration.volume")
+
+sv_dependence(sv, v = xvars)
